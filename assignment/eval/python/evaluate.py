@@ -13,7 +13,7 @@ def main():
         vectors = {}
         for line in f:
             vals = line.rstrip().split(' ')
-            vectors[vals[0]] = map(float, vals[1:])
+            vectors[vals[0]] = [float(x) for x in vals[1:]]
 
     vocab_size = len(words)
     vocab = {w: idx for idx, w in enumerate(words)}
@@ -21,12 +21,12 @@ def main():
 
     vector_dim = len(vectors[ivocab[0]])
     W = np.zeros((vocab_size, vector_dim))
-    for word, v in vectors.iteritems():
+    for word, v in vectors.items():
         if word == '<unk>':
             continue
         W[vocab[word], :] = v
 
-    # normalize each word vector to unit variance
+    # normalize each word vector to unit length
     W_norm = np.zeros(W.shape)
     d = (np.sum(W ** 2, 1) ** (0.5))
     W_norm = (W.T / d).T
@@ -56,7 +56,7 @@ def evaluate_vectors(W, vocab, ivocab):
     count_tot = 0 # count all questions
     full_count = 0 # count all questions, including those with unknown words
 
-    for i in xrange(len(filenames)):
+    for i in range(len(filenames)):
         with open('%s/%s' % (prefix, filenames[i]), 'r') as f:
             full_data = [line.rstrip().split(' ') for line in f]
             full_count += len(full_data)
@@ -67,7 +67,7 @@ def evaluate_vectors(W, vocab, ivocab):
 
         predictions = np.zeros((len(indices),))
         num_iter = int(np.ceil(len(indices) / float(split_size)))
-        for j in xrange(num_iter):
+        for j in range(num_iter):
             subset = np.arange(j*split_size, min((j + 1)*split_size, len(ind1)))
 
             pred_vec = (W[ind2[subset], :] - W[ind1[subset], :]
@@ -75,7 +75,7 @@ def evaluate_vectors(W, vocab, ivocab):
             #cosine similarity if input W has been normalized
             dist = np.dot(W, pred_vec.T)
 
-            for k in xrange(len(subset)):
+            for k in range(len(subset)):
                 dist[ind1[subset[k]], k] = -np.Inf
                 dist[ind2[subset[k]], k] = -np.Inf
                 dist[ind3[subset[k]], k] = -np.Inf

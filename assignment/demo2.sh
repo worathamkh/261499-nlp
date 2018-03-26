@@ -3,7 +3,9 @@
 # Makes programs, downloads sample data, trains a GloVe model, and then evaluates it.
 # One optional argument can specify the language used for eval script: matlab, octave or [default] python
 
-python corpus.py > corpus/source_all.txt
+make
+
+# python corpus.py > corpus/source_all.txt
 
 CORPUS=corpus/source_all.txt
 VOCAB_FILE=vocab.txt
