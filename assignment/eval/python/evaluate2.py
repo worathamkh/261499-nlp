@@ -66,7 +66,7 @@ def evaluate_vectors(W, vocab, ivocab):
 
     onehot_encoder = OneHotEncoder(sparse=False, n_values=vocab_size)
 
-    with open('discard.txt', 'r') as df, \
+    with open('discard_question.txt', 'r') as df, \
         open('numeric.txt', 'r') as nf, \
         open('person.txt', 'r') as pf, \
         open('location.txt', 'r') as lf, \
@@ -77,7 +77,9 @@ def evaluate_vectors(W, vocab, ivocab):
         numeric = set([x.decode('utf-8').strip().lower() for x in nf.readlines()])
         person = set([x.decode('utf-8').strip().lower() for x in pf.readlines()])
         location = set([x.decode('utf-8').strip().lower() for x in lf.readlines()])
-        questions = [x.split('::')[1].strip().decode('utf-8') for x in qf.readlines()]
+        #  location_bias = np.zeros((vocab_size,))
+        #  location_bias[vocab[u'ที่']] = 1;
+        questions = [x.split('::')[1].strip().decode('utf-8').lower() for x in qf.readlines()]
         ans = [x.split('::')[1].strip().decode('utf-8') for x in af.readlines()]
         for i in xrange(len(questions)):
             tokens = deepcut.tokenize(questions[i], custom_dict='dict.txt')
@@ -87,9 +89,12 @@ def evaluate_vectors(W, vocab, ivocab):
 
             # adjust weight by question type: person, location
             if not person.isdisjoint(tokens):
-                pass
-            elif not location.isdisjoint(tokens):
-                pass
+                print('recognize person question')
+
+            if not location.isdisjoint(tokens):
+                print("recognize location question")
+                #  context_1hot = np.sum(context_1hot, location_bias)
+                #  context_1hot[vocab[u'ที่']] = 2
 
             #  print(context_1hot)
             context_vec = np.dot(context_1hot.T, W).T # / len(context_idx)
@@ -102,11 +107,12 @@ def evaluate_vectors(W, vocab, ivocab):
 
             # reduce predictions if question is numeric
             if not numeric.isdisjoint(tokens):
+                print('recognize numeric question')
                 predictions = [x for x in predictions if is_numeric(x)]
 
             print('question: %s' % questions[i].encode('utf-8'))
             print('context: %s' % '|'.join(context).encode('utf-8'))
-            print('predictions: %s' % ', '.join(predictions[0:10]).encode('utf-8'))
+            print('predictions: %s' % ', '.join(predictions[0:5]).encode('utf-8'))
             print('expected: %s' % ans[i].encode('utf-8'))
             print('-----')
 
