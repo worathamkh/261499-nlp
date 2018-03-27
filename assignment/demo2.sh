@@ -5,7 +5,7 @@
 
 # make
 
-# python corpus.py > corpus/source_all.txt
+python corpus.py > corpus/source_all.txt
 
 CORPUS=corpus/source_all.txt
 VOCAB_FILE=vocab.txt
@@ -17,11 +17,12 @@ VERBOSE=2
 MEMORY=4.0
 VOCAB_MIN_COUNT=1
 VECTOR_SIZE=300
-MAX_ITER=200
+MAX_ITER=100
 WINDOW_SIZE=40
 BINARY=2
 NUM_THREADS=8
-X_MAX=10
+X_MAX=3
+ALPHA=0.5
 
 $BUILDDIR/vocab_count -min-count $VOCAB_MIN_COUNT -verbose $VERBOSE < $CORPUS > $VOCAB_FILE
 if [[ $? -eq 0 ]]
@@ -32,7 +33,7 @@ if [[ $? -eq 0 ]]
     $BUILDDIR/shuffle -memory $MEMORY -verbose $VERBOSE < $COOCCURRENCE_FILE > $COOCCURRENCE_SHUF_FILE
     if [[ $? -eq 0 ]]
     then
-       $BUILDDIR/glove -save-file $SAVE_FILE -threads $NUM_THREADS -input-file $COOCCURRENCE_SHUF_FILE -x-max $X_MAX -iter $MAX_ITER -vector-size $VECTOR_SIZE -binary $BINARY -vocab-file $VOCAB_FILE -verbose $VERBOSE
+       $BUILDDIR/glove -save-file $SAVE_FILE -threads $NUM_THREADS -input-file $COOCCURRENCE_SHUF_FILE -x-max $X_MAX -alpha $ALPHA -iter $MAX_ITER -vector-size $VECTOR_SIZE -binary $BINARY -vocab-file $VOCAB_FILE -verbose $VERBOSE
        if [[ $? -eq 0 ]]
        then
             python eval/python/evaluate2.py > results.txt
