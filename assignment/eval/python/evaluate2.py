@@ -39,7 +39,7 @@ def main():
 def evaluate_vectors(W, vocab, ivocab):
     """Evaluate the trained word vectors on a variety of tasks"""
 
-    discards = [u'เท่าไหร่', u'กี่', u'ที่ไหน', u'ที่ใด', u'ใด', u'แห่งใด', u'ใคร']
+    discards = [u'เท่าไหร่', u'เท่า', u'อะไร', u'ไหน', u'ไหร่', u'กี่', u'ที่ไหน', u'ที่ใด', u'ใด', u'แห่งใด', u'ใคร']
 
     questions_file = 'question_list.txt'
     ans_file = 'expected_ans.txt'
@@ -67,16 +67,18 @@ def evaluate_vectors(W, vocab, ivocab):
             questions = [x.split('::')[1].decode('utf-8') for x in qf.readlines()]
             ans = [x.split('::')[1].decode('utf-8') for x in af.readlines()]
             for i in xrange(len(questions)):
-                context = [word for word in word_tokenize(questions[i]) if word not in discards]
+                context = [word.strip().replace(' ', '') for word in word_tokenize(questions[i], engine='deepcut') if word not in discards]
                 context_idx = np.array([vocab[word] for word in context if word in vocab])
                 context_1hot = np.sum(onehot_encoder.fit_transform(context_idx.reshape(len(context_idx), 1)), axis=0)
+                #  print(context_1hot)
                 context_vec = np.dot(context_1hot.T, W).T / len(context_idx)
-                print(context_vec)
-                ans_vec = np.dot(W, context_vec.T)
-                print(ans_vec)
-                predicted_ans = ivocab[np.argmax(ans_vec)]
+                #  print(context_vec)
+                ans_1hot = np.dot(W, context_vec.T)
+                #  print(ans_1hot)
+                #  predicted_ans = ivocab[np.argmax(ans_1hot)]
+                predictions = [ivocab[idx] for idx in np.argsort(ans_1hot)[-10:]]
                 print('context: %s' % ' '.join(context))
-                print('predicted: %s' % predicted_ans)
+                print('predictions: %s' % ' '.join(predictions))
                 print('expected: %s' % ans[i])
 
     #  for i in xrange(len(filenames)):

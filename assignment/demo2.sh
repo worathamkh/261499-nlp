@@ -3,7 +3,7 @@
 # Makes programs, downloads sample data, trains a GloVe model, and then evaluates it.
 # One optional argument can specify the language used for eval script: matlab, octave or [default] python
 
-make
+# make
 
 # python corpus.py > corpus/source_all.txt
 
@@ -16,12 +16,12 @@ SAVE_FILE=vectors
 VERBOSE=2
 MEMORY=4.0
 VOCAB_MIN_COUNT=1
-VECTOR_SIZE=50
-MAX_ITER=800
-WINDOW_SIZE=5
+VECTOR_SIZE=300
+MAX_ITER=100
+WINDOW_SIZE=15
 BINARY=2
 NUM_THREADS=8
-X_MAX=100
+X_MAX=10
 
 $BUILDDIR/vocab_count -min-count $VOCAB_MIN_COUNT -verbose $VERBOSE < $CORPUS > $VOCAB_FILE
 if [[ $? -eq 0 ]]
@@ -35,7 +35,8 @@ if [[ $? -eq 0 ]]
        $BUILDDIR/glove -save-file $SAVE_FILE -threads $NUM_THREADS -input-file $COOCCURRENCE_SHUF_FILE -x-max $X_MAX -iter $MAX_ITER -vector-size $VECTOR_SIZE -binary $BINARY -vocab-file $VOCAB_FILE -verbose $VERBOSE
        if [[ $? -eq 0 ]]
        then
-            python eval/python/evaluate2.py
+            python eval/python/evaluate2.py > results.txt
+            cat results.txt
        fi
     fi
   fi
