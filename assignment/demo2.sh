@@ -18,16 +18,17 @@ MEMORY=4.0
 VOCAB_MIN_COUNT=1
 VECTOR_SIZE=300
 MAX_ITER=100
-WINDOW_SIZE=100
+WINDOW_SIZE=80
 BINARY=2
 NUM_THREADS=8
-X_MAX=5
-ALPHA=0.5
+X_MAX=3
+ALPHA=0.75
+SYMMETRIC=1
 
 $BUILDDIR/vocab_count -min-count $VOCAB_MIN_COUNT -verbose $VERBOSE < $CORPUS > $VOCAB_FILE
 if [[ $? -eq 0 ]]
   then
-  $BUILDDIR/cooccur -memory $MEMORY -vocab-file $VOCAB_FILE -verbose $VERBOSE -window-size $WINDOW_SIZE < $CORPUS > $COOCCURRENCE_FILE
+  $BUILDDIR/cooccur -memory $MEMORY -vocab-file $VOCAB_FILE -verbose $VERBOSE -window-size $WINDOW_SIZE -symmetric $SYMMETRIC < $CORPUS > $COOCCURRENCE_FILE
   if [[ $? -eq 0 ]]
   then
     $BUILDDIR/shuffle -memory $MEMORY -verbose $VERBOSE < $COOCCURRENCE_FILE > $COOCCURRENCE_SHUF_FILE

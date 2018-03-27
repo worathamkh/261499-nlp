@@ -43,23 +43,21 @@ def main():
 def evaluate_vectors(W, vocab, ivocab):
     """Evaluate the trained word vectors on a variety of tasks"""
 
-    #  discards = [u' ', u'เท่าไหร่', u'เท่า', u'อะไร', u'ไหน', u'ไหร่', u'กี่', u'ที่ไหน', u'ที่ใด', u'ใด', u'แห่งใด', u'ใคร']
-
     questions_file = 'question_list.txt'
     ans_file = 'expected_ans.txt'
     prefix = './eval/question-data/'
 
-    # to avoid memory overflow, could be increased/decreased
-    # depending on system and vocab size
-    split_size = 100
-
-    correct_sem = 0; # count correct semantic questions
-    correct_syn = 0; # count correct syntactic questions
-    correct_tot = 0 # count correct questions
-    count_sem = 0; # count all semantic questions
-    count_syn = 0; # count all syntactic questions
-    count_tot = 0 # count all questions
-    full_count = 0 # count all questions, including those with unknown words
+    #  # to avoid memory overflow, could be increased/decreased
+    #  # depending on system and vocab size
+    #  split_size = 100
+    #
+    #  correct_sem = 0; # count correct semantic questions
+    #  correct_syn = 0; # count correct syntactic questions
+    #  correct_tot = 0 # count correct questions
+    #  count_sem = 0; # count all semantic questions
+    #  count_syn = 0; # count all syntactic questions
+    #  count_tot = 0 # count all questions
+    #  full_count = 0 # count all questions, including those with unknown words
 
     vocab_size = W.shape[0]
     vector_dim = W.shape[1]
@@ -97,7 +95,7 @@ def evaluate_vectors(W, vocab, ivocab):
                 #  context_1hot[vocab[u'ที่']] = 2
 
             #  print(context_1hot)
-            context_vec = np.dot(context_1hot.T, W).T # / len(context_idx)
+            context_vec = np.dot(context_1hot.T, W).T / len(context_idx)
             #  print(context_vec)
             ans_1hot = np.dot(W, context_vec.T)
             #  print(ans_1hot)
