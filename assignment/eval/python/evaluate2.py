@@ -6,6 +6,9 @@ import numpy as np
 import deepcut
 from sklearn.preprocessing import OneHotEncoder
 
+def is_numeric(s):
+    return any(c.isdigit() for c in s)
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--vocab_file', default='vocab.txt', type=str)
@@ -63,30 +66,49 @@ def evaluate_vectors(W, vocab, ivocab):
 
     onehot_encoder = OneHotEncoder(sparse=False, n_values=vocab_size)
 
-    with open('discard.txt', 'r') as df:
+    with open('discard.txt', 'r') as df, \
+        open('numeric.txt', 'r') as nf, \
+        open('person.txt', 'r') as pf, \
+        open('location.txt', 'r') as lf, \
+        open('%s/%s' % (prefix, questions_file), 'r') as qf, \
+        open('%s/%s' % (prefix, ans_file), 'r') as af:
         discard = [x.decode('utf-8').strip().lower() for x in df.readlines()]
         discard += [u' ']
-        with open('%s/%s' % (prefix, questions_file), 'r') as qf:
-            with open('%s/%s' % (prefix, ans_file), 'r') as af:
-                questions = [x.split('::')[1].strip().decode('utf-8') for x in qf.readlines()]
-                ans = [x.split('::')[1].strip().decode('utf-8') for x in af.readlines()]
-                for i in xrange(len(questions)):
-                    tokens = deepcut.tokenize(questions[i], custom_dict='dict.txt')
-                    context = [word.strip().replace(u' ', u'') for word in tokens if word not in discard]
-                    context_idx = np.array([vocab[word] for word in context if word in vocab])
-                    context_1hot = np.sum(onehot_encoder.fit_transform(context_idx.reshape(len(context_idx), 1)), axis=0)
-                    #  print(context_1hot)
-                    context_vec = np.dot(context_1hot.T, W).T # / len(context_idx)
-                    #  print(context_vec)
-                    ans_1hot = np.dot(W, context_vec.T)
-                    #  print(ans_1hot)
-                    #  predicted_ans = ivocab[np.argmax(ans_1hot)]
-                    predictions = [ivocab[idx] for idx in np.argsort(ans_1hot)[-50:] if idx not in context_idx]
-                    predictions.reverse()
-                    print('context: %s' % ','.join(context).encode('utf-8'))
-                    print('predictions: %s' % ','.join(predictions[0:10]).encode('utf-8'))
-                    print('expected: %s' % ans[i].encode('utf-8'))
-                    print('-----')
+        numeric = set([x.decode('utf-8').strip().lower() for x in nf.readlines()])
+        person = set([x.decode('utf-8').strip().lower() for x in pf.readlines()])
+        location = set([x.decode('utf-8').strip().lower() for x in lf.readlines()])
+        questions = [x.split('::')[1].strip().decode('utf-8') for x in qf.readlines()]
+        ans = [x.split('::')[1].strip().decode('utf-8') for x in af.readlines()]
+        for i in xrange(len(questions)):
+            tokens = deepcut.tokenize(questions[i], custom_dict='dict.txt')
+            context = [word.strip().replace(u' ', u'') for word in tokens if word not in discard]
+            context_idx = np.array([vocab[word] for word in context if word in vocab])
+            context_1hot = np.sum(onehot_encoder.fit_transform(context_idx.reshape(len(context_idx), 1)), axis=0)
+
+            # adjust weight by question type: person, location
+            if not person.isdisjoint(tokens):
+                pass
+            elif not location.isdisjoint(tokens):
+                pass
+
+            #  print(context_1hot)
+            context_vec = np.dot(context_1hot.T, W).T # / len(context_idx)
+            #  print(context_vec)
+            ans_1hot = np.dot(W, context_vec.T)
+            #  print(ans_1hot)
+            #  predicted_ans = ivocab[np.argmax(ans_1hot)]
+            predictions = [ivocab[idx] for idx in np.argsort(ans_1hot)[-len(ans_1hot):] if idx not in context_idx]
+            predictions.reverse()
+
+            # reduce predictions if question is numeric
+            if not numeric.isdisjoint(tokens):
+                predictions = [x for x in predictions if is_numeric(x)]
+
+            print('question: %s' % questions[i].encode('utf-8'))
+            print('context: %s' % '|'.join(context).encode('utf-8'))
+            print('predictions: %s' % ', '.join(predictions[0:10]).encode('utf-8'))
+            print('expected: %s' % ans[i].encode('utf-8'))
+            print('-----')
 
     #  for i in xrange(len(filenames)):
     #      with open('%s/%s' % (prefix, filenames[i]), 'r') as f:
