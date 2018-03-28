@@ -5,7 +5,7 @@
 
 # make
 
-# python corpus.py > corpus/source_all.txt
+python corpus.py > corpus/source_all.txt
 
 CORPUS=corpus/source_all.txt
 VOCAB_FILE=vocab.txt
@@ -18,10 +18,10 @@ MEMORY=4.0
 VOCAB_MIN_COUNT=1
 VECTOR_SIZE=300
 MAX_ITER=100
-WINDOW_SIZE=80
+WINDOW_SIZE=200
 BINARY=2
 NUM_THREADS=8
-X_MAX=3
+X_MAX=5
 ALPHA=0.75
 SYMMETRIC=1
 

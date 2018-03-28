@@ -68,8 +68,8 @@ def evaluate_vectors(W, vocab, ivocab):
         open('numeric.txt', 'r') as nf, \
         open('person.txt', 'r') as pf, \
         open('location.txt', 'r') as lf, \
-        open('%s/%s' % (prefix, questions_file), 'r') as qf, \
-        open('%s/%s' % (prefix, ans_file), 'r') as af:
+        open('%s/%s' % (prefix, questions_file), 'r') as qf:
+        #  open('%s/%s' % (prefix, ans_file), 'r') as af:
         discard = [x.decode('utf-8').strip().lower() for x in df.readlines()]
         discard += [u' ']
         numeric = set([x.decode('utf-8').strip().lower() for x in nf.readlines()])
@@ -78,7 +78,7 @@ def evaluate_vectors(W, vocab, ivocab):
         #  location_bias = np.zeros((vocab_size,))
         #  location_bias[vocab[u'ที่']] = 1;
         questions = [x.split('::')[1].strip().decode('utf-8').lower() for x in qf.readlines()]
-        ans = [x.split('::')[1].strip().decode('utf-8') for x in af.readlines()]
+        #  ans = [x.split('::')[1].strip().decode('utf-8') for x in af.readlines()]
         for i in xrange(len(questions)):
             tokens = deepcut.tokenize(questions[i], custom_dict='dict.txt')
             context = [word.strip().replace(u' ', u'') for word in tokens if word not in discard]
@@ -87,32 +87,71 @@ def evaluate_vectors(W, vocab, ivocab):
 
             # adjust weight by question type: person, location
             if not person.isdisjoint(tokens):
-                print('recognize person question')
+                #  print('recognize person question')
+                pass
 
             if not location.isdisjoint(tokens):
-                print("recognize location question")
+                #  print("recognize location question")
                 #  context_1hot = np.sum(context_1hot, location_bias)
                 #  context_1hot[vocab[u'ที่']] = 2
+                pass
 
             #  print(context_1hot)
             context_vec = np.dot(context_1hot.T, W).T / len(context_idx)
+            #
+            #  vec_norm = np.zeros(context_vec.shape)
+            #  d = (np.sum(context_vec ** 2,) ** (0.5))
+            #  vec_norm = (context_vec.T / d).T
+            #
+            #  dist = np.dot(W, vec_norm.T)
+            #
+            #  for term in context:
+            #      if term in vocab:
+            #          index = vocab[term]
+            #          dist[index] = -np.Inf
+
             #  print(context_vec)
             ans_1hot = np.dot(W, context_vec.T)
             #  print(ans_1hot)
+            #  a = np.argsort(-dist)
             #  predicted_ans = ivocab[np.argmax(ans_1hot)]
             predictions = [ivocab[idx] for idx in np.argsort(ans_1hot)[-len(ans_1hot):] if idx not in context_idx]
+            #  predictions2 = [ivocab[idx] for idx in a if idx not in context_idx]
             predictions.reverse()
 
-            # reduce predictions if question is numeric
-            if not numeric.isdisjoint(tokens):
-                print('recognize numeric question')
-                predictions = [x for x in predictions if is_numeric(x)]
+            prefix = u''
+            suffix = u''
 
-            print('question: %s' % questions[i].encode('utf-8'))
-            print('context: %s' % '|'.join(context).encode('utf-8'))
-            print('predictions: %s' % ', '.join(predictions[0:5]).encode('utf-8'))
-            print('expected: %s' % ans[i].encode('utf-8'))
-            print('-----')
+            # reduce predictions if question is numeric
+            if not person.isdisjoint(tokens):
+                #  print('recognize person question')
+                predictions = [x for x in predictions if not is_numeric(x)]
+            if not location.isdisjoint(tokens):
+                #  print("recognize location question")
+                predictions = [x for x in predictions if not is_numeric(x)]
+            if not numeric.isdisjoint(tokens):
+                #  print('recognize numeric question')
+                predictions = [x for x in predictions if is_numeric(x)]
+                if u'กี่' in tokens:
+                    suffix = tokens[tokens.index(u'กี่')+1]
+                #  predictions2 = [x for x in predictions2 if is_numeric(x)]
+
+            #  print('question: %s' % questions[i].encode('utf-8'))
+            #  print('context: %s' % ' '.join(context).encode('utf-8'))
+            #  print('predictions: %s' % ', '.join(predictions[0:5]).encode('utf-8'))
+            line = u'Q%d::' % (i+1)
+            for j in range(0, 5):
+                #  print('#%d %s %s %s' % (j+1, prefix.encode('utf-8'), predictions[j].encode('utf-8'), suffix.encode('utf-8')))
+                end = u'||'
+                if j is 4:
+                    end = u''
+                line += '%s%s%s%s' % (prefix, predictions[j], suffix, end)
+            print(line.encode('utf-8'))
+            #  print('predictions2: %s' % ', '.join(predictions2[0:5]).encode('utf-8'))
+            #  for x in a[0:5]:
+            #      print(ivocab[x].encode('utf-8'), dist[x])
+            #  print('expected: %s' % ans[i].encode('utf-8'))
+            #  print('-----')
 
     #  for i in xrange(len(filenames)):
     #      with open('%s/%s' % (prefix, filenames[i]), 'r') as f:
